@@ -1,4 +1,2 @@
 # e230_energy_reader
-Yun Arduino reader version of energy Landis&amp;Gyr counter.
-Please, follow here:
-https://github.com/ymasur/e230_energy_reader 
+Projet de lecture du compteur d’énergie, à partir de l’interface optique proposé par JM Paratte.
