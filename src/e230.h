@@ -1,11 +1,9 @@
 /*  e230.h
 	  ------
-	Definitions part
-
-YM: 06.01.2021 - adapted from e230_5.ino, from JM Paratte
-V 018: global src cleaning, record file name as: YYMM-enr.txt, add TAB after recorded time
-RAM:   [======    ]  62.1% (used 1590 bytes from 2560 bytes)
-Flash: [========= ]  94.6% (used 27118 bytes from 28672 bytes)
+	  Definitions part
+    2021.01.13 - YM: path shortened
+    2021.01.13 - YM: add fatal error
+    2021.01.18 - YM: add LED_X on pin 5, for time measurement
 */
 
 #ifndef E230_H
@@ -19,7 +17,7 @@ Flash: [========= ]  94.6% (used 27118 bytes from 28672 bytes)
 #endif
 
 #define __PROG__ "e-reader Yun"
-#define VERSION "05.018" // program version
+#define VERSION "05.025" // program version
 /*
   with dynamic alloc of E230_S
 */
@@ -108,12 +106,13 @@ CLASS Print_out * stream_out
 
 #endif // ! _WIN32
 
-#define E230_BUF_SZ (512)   // size of input buffer
+#define E230_BUF_SZ (511)   // size of input buffer
   
 #define ON 1
 #define OFF 0
 #define LED_J A2
 #define LED_R A3
+#define LED_X A5
 #define LED_ON(x) digitalWrite(x, 1)
 #define LED_OFF(x) digitalWrite(x, 0)
 #define LED_REV(x) digitalWrite(x, !digitalRead(x))
@@ -139,18 +138,18 @@ CLASS char dateTimeStr[DT_LENGHT+1];
 CLASS jm_LCM2004A_I2C * lcd;
 
 // freemem
-#define LOW_SRAM_ALERT 200  // Normal use : 910..965 left
+#define LOW_SRAM_ALERT 120  // Normal use : 102 left
 
 // global vars are defined here
 
-#define NAME_LENGHT 32  // sufficient for path/name
+#define NAME_LENGHT 15  // sufficient for path/name
 //                          1         2         3
 //                0123456789012345678901234567890
 CLASS char fname[NAME_LENGHT+1]
 #ifdef MAIN
 //                          1         2         3
 //                012345678901234567890123456789012
-               = "/mnt/sd/arduino/www/YYMM-enr.txt";
+               = "/m/YYMM-enr.txt";
                
 //conservative filename 8.3 format
 //the four chars 'YYMM' are replaced by year and month, as 2012
@@ -158,7 +157,7 @@ CLASS char fname[NAME_LENGHT+1]
 ;
 #endif
 
-#define OFFSET_YYMM 20 // offset used to modify the filename: YYMM
+#define OFFSET_YYMM 3 // offset used to modify the filename: YYMM
 
 // display def and vars
 #define LN0 0x01
@@ -184,23 +183,27 @@ CLASS byte tempo_msg;
 #define TEMPO_MSG_VAL 15
 
 #ifndef proc
-enum proc { wait, ask, rec, getv, calc };
+  enum proc { wait, ask, rec, getv, calc };
 #endif
 CLASS u8 pstate;  // aqu process states
 
 CLASS int min_stack;
 #define GET_MIN_STACK() {if (min_stack > freeMemory()) min_stack = freeMemory();}
 
+#define CYCLE() { if (pstate)	  p_e230->cycle(); }
+
 // -----------------------------------------------------------------------------
 
 // Function prototype (VS-CODE)
 
 void setup();
+void init_linux_time_process();
 void poll_loop_1_s();
 void poll_loop_X_ms();
 bool IsSyncTime_15_minutes();
 
 // e230 module
+unsigned ms();
 char * get_e230_buf();
 void get_all_values(char * p_buf);
 // void print_data_values(char * p_buf);
@@ -230,9 +233,12 @@ void log_err(const char * msg); // with flag err_act set, onto SD, display and s
 void log_msg(const char * msg); // onto SD, display and serial
 void log_info(const char * msg); // onto display for short time and serial
 void store_datas(char *fname);
+
+//const char flog[] = "/mnt/sd/arduino/www/e230.log";
+const char flog[] = "/m/e230.log";
 void log_msg_SD(const char * msg);
 
-int getTimeStamp(char *, short len);
+int getTimeStamp(char *, u8 len);
 bool IsSyncTime_10_seconds();
 bool IsSyncTime_x_seconds(uint8_t s=10);
 bool IsSyncTime_10_minutes();

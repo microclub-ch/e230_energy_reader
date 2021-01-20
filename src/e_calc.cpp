@@ -13,12 +13,11 @@
 
 
 // The string value in ASCII; value is followed with chr as ")"
-// exeample: "014605.516*kWh)" give: "014605.516"
+// exeample: "014605.516*kWh)" gives: "014605.516"
 // Return value: ASCII, without trailing chr
 char * S_V::get_sval()
 {
 	static char svaln[16];	// for temp usage
-	char * s = NULL;		// point into original buffer
 	char * d = svaln;		// point to local buffer
 
 	if (sval == NULL)		// Q: nothing to do?
@@ -27,6 +26,8 @@ char * S_V::get_sval()
 	}
 	else
 	{ 
+		char * s;		// point into original buffer
+		
 		s = sval; 	d = svaln;
 		do {
 			*d++ = *s++;	// copy chr until no numeric
@@ -44,9 +45,5 @@ void get_all_values(char* p_buf)
 	data.conv();
 }
 
-void data_print()
-{
-	// data.print();
-}
 
 #endif // E_CALC_CPP

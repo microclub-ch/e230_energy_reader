@@ -87,12 +87,8 @@ void store_datas(char *fname)
 */
 void log_msg_SD(const char * msg)
 {
-  const char flog[] = "/mnt/sd/arduino/www/e230.log";
   // open the file, 3 try...
   short i = 0;
-
-  display_info(msg);
-  //dateTime_up_ascii();
 
   do 
   {

@@ -17,7 +17,7 @@
 
 #include <Arduino.h>
 #include "e230.h"
-
+extern bool err_fatal;
 // -----------------------------------------------------------------------------
 // Storage class of common variables, always in main module
 // #define E230_BUF_SZ (512)   // size of input buffer
@@ -383,6 +383,14 @@ DEBUG_LINE_PRINTF("<stop>");
 		if (_started == false) return;
 		if (_ready == true) return;
 		if (_errored == true) return;
+#if 1
+		if (_ptr > _buf + BUFSIZ)		// YM 13.01.2021
+		{
+			err_fatal = true;
+			_errored = true;
+			return;
+		}
+#endif
 
 		int c = stream_in->read();
 

@@ -22,16 +22,29 @@
     returned value:
     - number of chr written
 */
-int getTimeStamp(char *p=dateTimeStr+2, short len=19)
+//Process time;
+#if 0
+void init_linux_time_process()
 {
-  short i = 0;
-  
-  Process time;
   // date is a command line utility to get the date and the time
   // in different formats depending on the additional parameter
   time.begin(F("date"));
   // parameters: for the complete date yy-mm-dd hh:mm:ss
   time.addParameter(F("+%y-%m-%d %T"));
+}
+#endif
+
+int getTimeStamp(char *p=dateTimeStr+2, u8 len=19)
+{
+  Process time;
+  u8 i = 0;
+  
+  // date is a command line utility to get the date and the time
+  // in different formats depending on the additional parameter
+  time.begin(F("date"));
+  // parameters: for the complete date yy-mm-dd hh:mm:ss
+  time.addParameter(F("+%y-%m-%d %T"));
+  
   time.run(); // run the command
 
   // read the output of the command
@@ -46,6 +59,8 @@ int getTimeStamp(char *p=dateTimeStr+2, short len=19)
 
     if (p_e230 != NULL) 
       p_e230->cycle();
+
+    GET_MIN_STACK();
   }
   p[i] = '\0'; // end of the collected string
 

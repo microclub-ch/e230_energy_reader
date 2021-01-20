@@ -1,0 +1,52 @@
+e230_energy_reader
+==================
+YM : 2021.01.18 V 024
+- getTimeStamp() usage in transaction process: inc second locally
+- print() : correct usage of index int i, in calc
+
+RAM:   [======    ]  62.1% (used 1591 bytes from 2560 bytes)
+Flash: [==========]  95.8% (used 27474 bytes from 28672 bytes)
+
+YM : 2021.01.18 V 023
+Use of unsigned ms(), add LED_X on pin A3
+
+RAM:   [======    ]  62.1% (used 1591 bytes from 2560 bytes)
+Flash: [==========]  95.7% (used 27434 bytes from 28672 bytes)
+
+YM : 2021.01.13 - V 022:
+- modif process in case of error
+- path for record shortened
+RAM:   [======    ]  62.0% (used 1586 bytes from 2560 bytes)
+Flash: [==========]  95.8% (used 27466 bytes from 28672 bytes)
+
+YM : 2021.01.12 - V 020: 
+macro CYCLE(), reset flag Timeout
+Stack min: 208 / mem 221
+RAM:   [======    ]  63.4% (used 1624 bytes from 2560 bytes)
+Flash: [==========]  95.9% (used 27492 bytes from 28672 bytes)
+
+
+YM : 2021.11.01 - V 019: 
+- src clean
+- renamed vars e_xxx as p_xxx
+- energy computed at double instead float
+RAM:   [======    ]  62.1% (used 1590 bytes from 2560 bytes)
+Flash: [========= ]  94.6% (used 27128 bytes from 28672 bytes)
+
+YM : 2021.11.01 - V 018 
+- Stack min: 102
+- Menues partially done
+- global src cleaning
+- record file name as: YYMM-enr.txt, 
+- add TAB after recorded time
+
+YM : 2020.31.01 - V017
+- Remove RTC functions, only Linux time
+- Record fail
+
+YM : 2020.30.12 - V 016 :
+first running version. Menues missing. E230_S dynamically allocated.
+- adapted from e230_5.ino, from JM Paratte
+- files are named 2101engy.txt 
+RAM:   [======    ]  61.5% (used 1575 bytes from 2560 bytes)
+Flash: [========= ]  93.4% (used 26792 bytes from 28672 bytes)

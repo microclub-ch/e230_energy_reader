@@ -1,7 +1,11 @@
 /* 	e_main.cpp
-	----------
+	------------
 	YM: 31.12.2020
   01.01.2021: add min stack
+  12.01.2021: typos
+  13.01.2021: process in case of error
+  18.01.2021: use of unsigned ms()
+  19.01.2021: clock is incremented in pstate active
 */
 #ifndef MAIN
 #define MAIN
@@ -14,17 +18,6 @@
 
 bool time_to_store, store_done; // storage process control
 bool print_val; // cmd 'p' active print command
-
-// log the error message 
-void log_err(const char * msg)
-{
-  err_act = true; // make the error flag active (removed by menu)
-  //strncpy(last_log, msg, sizeof(last_log) );
-  // log_info(msg);
-  // display_at_ln(msg);
-  //log_msg_SD(msg);
-}
-
 
 // display an info for a short time, and not memorized
 void log_info(const char * msg)
@@ -43,6 +36,7 @@ void setup()
   pinMode(SW2, INPUT);
   pinMode(LED_J, OUTPUT);
   pinMode(LED_R, OUTPUT);  
+  pinMode(LED_X, OUTPUT);
 
   LED_ON(LED_R);
 
@@ -50,8 +44,8 @@ void setup()
 	sw[0] = new Sw(SW1);
 	sw[1] = new Sw(SW2);
 
-  min_stack = 9999;
-	menu = 0; // clear menu setting
+  min_stack = 9999;   //set higher enough
+	menu = 0;           // clear menu setting
   ser_copy = 0;
 
   // I2C
@@ -67,15 +61,17 @@ void setup()
 	Serial.begin(9600); 
 	display_at_ln("Serial started", 2);
 
-  delay(3000);
-
   // Bridge startup
   Bridge.begin();
 
   display_at_ln("Read time...", 3);
   strcpy(dateTimeStr, ("2021")); // assure century
+  // init_linux_time_process();
   getTimeStamp(dateTimeStr+2, sizeof(dateTimeStr)-3);
+  display_at_ln(dateTimeStr,0);
 
+  delay(3000);
+  
   FileSystem.begin();
 
 	// set stream_in hardware...
@@ -88,19 +84,12 @@ void setup()
 
   p_e230 = new(E230_S);
   if (p_e230 != NULL)
-    display_at_ln("e230 instancied", 2);
+    display_at_ln("e230 On", 2);
 
 	// stabilize STREAM_IN and STREAM_OUT RX/TX lines after reset/power up...
 	delay(3000);
 
 	err_act = false;  // no error
-
-  // Listen for incoming connection only from localhost
-  // (no one from the external network could connect)
-#if 0
-	server.listenOnLocalhost();
-	server.begin();
-#endif
 
   log_msg_SD( __PROG__ " " VERSION );
 
@@ -155,21 +144,21 @@ void serial_cmd()
 
     case '1': // condensé énergie cons - prod - U - I - P
       menu = 1;
-      ser_copy = LN1+LN2+LN3;
+      ser_copy = LN2+LN3;
     break;
 
     case '2': // U, I, P des 3 phases
       menu = 2;
-      ser_copy = LN1+LN2;      
-    break;
-
-    case '3': // dernier enreg.
-      menu = 3;
-      ser_copy = LN1+LN2;        
-    break;
-
-    case '4': // dernier log
       ser_copy = LN1+LN2+LN3;      
+    break;
+
+    case '3': // erreurs
+      menu = 3;
+      ser_copy = LN1+LN2+LN3;        
+    break;
+
+    case '4': // version
+      ser_copy = LN1;      
       menu = 4;
     break;
 
@@ -187,7 +176,7 @@ void serial_cmd()
     break;
 
     case 'm':
-      Serial.print(F("\nfree mem:")); Serial.println(freeMemory());
+      Serial.print(F("\nFree mem:")); Serial.println(freeMemory());
     break;
 
     case 'p':
@@ -209,9 +198,7 @@ void serial_cmd()
 
     case '?':
     default:
-      //ser_copy = 0;
-      //cmd = 0;
-      Serial.println(F("\ncmd: +, -, menu 1, 2, 3, 4, 5."));
+      Serial.println(F("\ncmd: d(ate, p(rint, m(em, s(tack, menu 1..4."));
     break;
   }
 } // serial_cmd()
@@ -242,81 +229,93 @@ void poll_loop_X_ms()
 }
 
 
-static unsigned char rec_count;
+static unsigned char rec_count; // record time, for manage timeout
 
 void poll_loop_1_s()
 {
-  getTimeStamp(dateTimeStr+2, sizeof(dateTimeStr)-3);
+  if (!pstate)
+  {
+    getTimeStamp(dateTimeStr+2, sizeof(dateTimeStr)-3);
+  }
+  else
+  {
+    char *ps = dateTimeStr + TIME_S;  // point second digit
+    *ps == '9' ? *ps = '0' : ++*(ps);   // increment it, if < 9
+  }
 
+  display_menu(); // rest of display depends of the menu choice
+
+  LED_ON(LED_X);
   Serial.print(dateTimeStr);
   Serial.print(F(" pstate:")); Serial.println(pstate);
+  LED_OFF(LED_X);
 
+  // ask energy all 15 seconds
   if (IsSyncTime_x_seconds(15) && pstate == wait)
   {
     p_e230->begin();
     p_e230->start();
     rec_count = 0;
-    Serial.println(F(" ***Start "));
+    Serial.println(F("*Start "));
     LED_OFF(LED_R);
     pstate = ask;
   }
-
   else if(!p_e230->ready() && pstate == ask)
   {
-    Serial.println(F(" get values"));
+    Serial.println(F("*Ask"));
     pstate = rec;    
   }
-    
   else if (pstate == rec )
   {
-    if (rec_count++ > 6)
+    Serial.print(p_e230->e_state()); Serial.print(" ! "); 
+    Serial.print(p_e230->started()); Serial.print(" ! ");  
+
+    if (rec_count++ > 6)  // receive does not take more 5 seconds
     {
-      const  char * msg_timeout = "Read timeout!";
+      const  char msg_timeout[] = "*Read timeout!";
       log_info(msg_timeout);
       log_msg_SD(msg_timeout);
       err_timeout = true;
       rec_count = 0;
-      pstate = getv;
+      pstate = wait;
       Serial.println("*E*");
     }
-    
-    Serial.print(p_e230->e_state()); Serial.print(" ! "); 
-    Serial.print(p_e230->started()); Serial.print(" ! ");
-    if (p_e230->errored())
-      { 
-        log_info("Read error!");
-        err_act = true; 
-        pstate = wait;
-      }
-
-      if (p_e230->ready())
-        pstate = getv;
-  }
-
-  else if (p_e230->started() == false && pstate == getv)
-  {
-    Serial.println(F(" get values"));
+    else if (p_e230->errored())  // Q: driver encoutered an error?
+    {                     // A: yes show it
+      log_info("*Read error!");
+      err_act = true; 
+      pstate = wait;      // abort read process
+    }
+    else if (p_e230->ready())    // Q: reading done?
+    {
+      pstate = getv;      // A: yes, next
+    }
+      
+  } // pstate rec
+  else if (p_e230->started() == false && pstate == getv) // Q: time to get values?
+  {                                                      // A: yes, get it
+    Serial.println(F("*Get values"));
     get_all_values(p_e230->_buf);
     err_act = false;
+    err_timeout = false;
     pstate = calc;
   }
-  
-  else if(pstate == calc)
-  {
-    Serial.println(F(" ***Wait"));
+  else if(pstate == calc) // Q: calculation done?
+  {                       // A: yes, wait 
+    Serial.println(F("*Wait"));
     pstate = wait;
   }
-  else if(pstate == wait)
+  else if(pstate == wait)         // Q: no transaction?
   {
     if (IsSyncTime_15_minutes())  // Q: time window to store data?
     {                             // A: Yes, set the marker
-      if (!time_to_store)
-      {
-        Serial.println(F(" ***Store"));
+      if (!time_to_store)         // Q: not already done?
+      {                           // A: yes, flag it
+        Serial.println(F("*Store"));
         time_to_store = true;         
       }
     }
-    else                  // A: no, reset marker
+    else                  // A: not in window, reset marker
     {
       if (time_to_store)  // Q: flag active?
       {
@@ -330,7 +329,7 @@ void poll_loop_1_s()
       print_val = false;
     }
   }// psate == wait
-
+  
   if (pstate)
     LED_ON(LED_J);
   else
@@ -358,10 +357,6 @@ void poll_loop_1_s()
     store_done = false;
   }
 
-/* ----------------------------------------------------- */
-
-  display_menu(); // rest of display depends of the menu choice
-
 }
 
 /* main loop of Arduino
@@ -372,9 +367,9 @@ void poll_loop_1_s()
 
 void loop()
 {
-  static unsigned long fastPreviusMs, mainPreviusMs;
+  static unsigned fastPreviusMs, mainPreviusMs;
 
-  unsigned long currentMs = millis();
+  unsigned currentMs = ms();
   if (currentMs - fastPreviusMs > SHORT_CYCLE)
   {
     fastPreviusMs = currentMs;
@@ -387,7 +382,7 @@ void loop()
     poll_loop_1_s();
   }  
 
-  if (pstate)	  p_e230->cycle();
+  CYCLE();
   
 }// loop()
 
