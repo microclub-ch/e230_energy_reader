@@ -3,7 +3,7 @@
 	  Definitions part
     2021.01.13 - YM: path shortened
     2021.01.13 - YM: add fatal error
-    2021.01.18 - YM: add LED_X on pin 5, for time measurement
+    2021.01.18 - YM: add LED_X on pin 4, for time measurement
 */
 
 #ifndef E230_H
