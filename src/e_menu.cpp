@@ -10,6 +10,8 @@
 #include "e230.h"
 #include "e_menu.h"
 
+extern bool print_log;
+
 /*
     menu_select()
     -------------
@@ -90,7 +92,7 @@ void display_at_ln(const char * info, u8 ln)
   lcd->print(buf);
   CYCLE();
 
-  if (ser_copy_bit && ser_copy)  //Q: is info to be copied onto serial?
+  if (ser_copy_bit && ser_copy && print_log)  //Q: is info to be copied onto serial?
   {
     Serial.println(); Serial.print(info);    //A: yes, print it
     ser_copy &= ~ser_copy_bit;    // remove flag

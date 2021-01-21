@@ -68,8 +68,8 @@ int getTimeStamp(char *p=dateTimeStr+2, u8 len=19)
 }
 
 // convert ASCII values to int (see position of digit)
-int second(){return (dateTimeStr[17]-'0')*10 + (dateTimeStr[18]-'0'); }
-int minute(){return (dateTimeStr[14]-'0')*10 + (dateTimeStr[15]-'0'); }
+int second(){ return (dateTimeStr[17]-'0') * 10 + (dateTimeStr[18]-'0'); }
+int minute(){ return (dateTimeStr[14]-'0') * 10 + (dateTimeStr[15]-'0'); }
 
 bool IsSyncTime_x_seconds(uint8_t s)
 {

@@ -4,6 +4,7 @@
     2021.01.13 - YM: path shortened
     2021.01.13 - YM: add fatal error
     2021.01.18 - YM: add LED_X on pin 4, for time measurement
+    2021.01.21 - YM: add flag print_log, and cmd 'l'
 */
 
 #ifndef E230_H
@@ -17,7 +18,7 @@
 #endif
 
 #define __PROG__ "e-reader Yun"
-#define VERSION "05.025" // program version
+#define VERSION "05.026" // program version
 /*
   with dynamic alloc of E230_S
 */

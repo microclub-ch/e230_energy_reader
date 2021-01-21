@@ -1,5 +1,11 @@
 e230_energy_reader
 ==================
+
+YM : 2021.01.18 V 026
+- Add flag to allow Serial print
+RAM:   [======    ]  62.4% (used 1598 bytes from 2560 bytes)
+Flash: [==========]  96.4% (used 27644 bytes from 28672 bytes)
+
 YM : 2021.01.18 V 024
 - getTimeStamp() usage in transaction process: inc second locally
 - print() : correct usage of index int i, in calc

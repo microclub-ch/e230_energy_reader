@@ -18,6 +18,7 @@
 
 bool time_to_store, store_done; // storage process control
 bool print_val; // cmd 'p' active print command
+bool print_log; // allow Serial to print log
 
 // display an info for a short time, and not memorized
 void log_info(const char * msg)
@@ -58,7 +59,8 @@ void setup()
   display_at_ln("LCD init done", 1);     
 
 	// we use serial for log messages
-	Serial.begin(9600); 
+	Serial.begin(9600);
+  print_log = true;
 	display_at_ln("Serial started", 2);
 
   // Bridge startup
@@ -175,6 +177,11 @@ void serial_cmd()
       // Serial.println(F("Store datas"));
     break;
 
+    case 'l':
+      print_log =! print_log;
+      Serial.print("\nLog:"); Serial.print(print_log ? F("on"):F("off"));
+    break;
+
     case 'm':
       Serial.print(F("\nFree mem:")); Serial.println(freeMemory());
     break;
@@ -198,7 +205,7 @@ void serial_cmd()
 
     case '?':
     default:
-      Serial.println(F("\ncmd: d(ate, p(rint, m(em, s(tack, menu 1..4."));
+      Serial.println(F("\ncmd: d(ate, l(og toggle, p(rint, m(em, s(tack, menu 1..4."));
     break;
   }
 } // serial_cmd()
@@ -246,8 +253,11 @@ void poll_loop_1_s()
   display_menu(); // rest of display depends of the menu choice
 
   LED_ON(LED_X);
-  Serial.print(dateTimeStr);
-  Serial.print(F(" pstate:")); Serial.println(pstate);
+  if (print_log)
+  {
+    Serial.print(dateTimeStr);
+    Serial.print(F(" pstate:")); Serial.println(pstate);
+  }
   LED_OFF(LED_X);
 
   // ask energy all 15 seconds
@@ -256,19 +266,22 @@ void poll_loop_1_s()
     p_e230->begin();
     p_e230->start();
     rec_count = 0;
-    Serial.println(F("*Start "));
+    if (print_log) Serial.println(F("*Start "));
     LED_OFF(LED_R);
     pstate = ask;
   }
   else if(!p_e230->ready() && pstate == ask)
   {
-    Serial.println(F("*Ask"));
+    if (print_log) Serial.println(F("*Ask"));
     pstate = rec;    
   }
   else if (pstate == rec )
   {
-    Serial.print(p_e230->e_state()); Serial.print(" ! "); 
-    Serial.print(p_e230->started()); Serial.print(" ! ");  
+    if (print_log)
+    {
+      Serial.print(p_e230->e_state()); Serial.print(" ! "); 
+      Serial.print(p_e230->started()); Serial.print(" ! ");
+    }  
 
     if (rec_count++ > 6)  // receive does not take more 5 seconds
     {
@@ -294,7 +307,7 @@ void poll_loop_1_s()
   } // pstate rec
   else if (p_e230->started() == false && pstate == getv) // Q: time to get values?
   {                                                      // A: yes, get it
-    Serial.println(F("*Get values"));
+    if (print_log) Serial.println(F("*Get values"));
     get_all_values(p_e230->_buf);
     err_act = false;
     err_timeout = false;
@@ -302,7 +315,7 @@ void poll_loop_1_s()
   }
   else if(pstate == calc) // Q: calculation done?
   {                       // A: yes, wait 
-    Serial.println(F("*Wait"));
+    if (print_log) Serial.println(F("*Wait"));
     pstate = wait;
   }
   else if(pstate == wait)         // Q: no transaction?
