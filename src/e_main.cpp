@@ -6,6 +6,7 @@
   13.01.2021: process in case of error
   18.01.2021: use of unsigned ms()
   19.01.2021: clock is incremented in pstate active
+  23.01.2021: log automatically stoped if Serial takes too long time
 */
 #ifndef MAIN
 #define MAIN
@@ -15,6 +16,8 @@
 
 #include "e230.h"
 #include "e_menu.h"
+
+unsigned currentMs; // timing used for reccurent call
 
 bool time_to_store, store_done; // storage process control
 bool print_val; // cmd 'p' active print command
@@ -179,7 +182,7 @@ void serial_cmd()
 
     case 'l':
       print_log =! print_log;
-      Serial.print("\nLog:"); Serial.print(print_log ? F("on"):F("off"));
+      Serial.print("\nLog:"); Serial.print(print_log ? F("on\n"):F("off"));
     break;
 
     case 'm':
@@ -240,25 +243,29 @@ static unsigned char rec_count; // record time, for manage timeout
 
 void poll_loop_1_s()
 {
-  if (!pstate)
-  {
+  
+  if (!pstate)  // Q: Is Serial ask energy running?
+  {             // A: no, get the Unix time
     getTimeStamp(dateTimeStr+2, sizeof(dateTimeStr)-3);
   }
-  else
-  {
-    char *ps = dateTimeStr + TIME_S;  // point second digit
+  else          // the Unix time cannot be read for 6-7 seconds
+  {             // make the seconds up to date
+    char *ps = dateTimeStr + TIME_S;  // point seconds digit
     *ps == '9' ? *ps = '0' : ++*(ps);   // increment it, if < 9
   }
 
-  display_menu(); // rest of display depends of the menu choice
-
-  LED_ON(LED_X);
-  if (print_log)
-  {
+  LED_ON(LED_X);  // $$$ timing measure
+  if (print_log)  // Q: log allowed?
+  {               // A: yes, print it
     Serial.print(dateTimeStr);
     Serial.print(F(" pstate:")); Serial.println(pstate);
   }
-  LED_OFF(LED_X);
+
+  if ((ms() - currentMs) > 500U ) // Q: is Serial gobing too long time?
+    print_log = false;      // A: Yes, probably disconnected, stop log
+  LED_OFF(LED_X); // $$$ timing measure
+
+  display_menu(); // rest of display depends of the menu choice
 
   // ask energy all 15 seconds
   if (IsSyncTime_x_seconds(15) && pstate == wait)
@@ -382,7 +389,8 @@ void loop()
 {
   static unsigned fastPreviusMs, mainPreviusMs;
 
-  unsigned currentMs = ms();
+  currentMs = ms();
+
   if (currentMs - fastPreviusMs > SHORT_CYCLE)
   {
     fastPreviusMs = currentMs;

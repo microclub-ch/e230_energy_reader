@@ -229,14 +229,14 @@ void display_err()
 
             //  012345678901234567890
   sprintf(buf, "file:      "); buf[5] = err_file ? '1':'0'; 
-  #if 1
               //   01234567890
   sprintf(buf+10, "FATAL: "); buf[16] = err_fatal ? '1':'0'; 
-  #endif
-  
   display_at_ln(buf, 1);
 
-  sprintf(buf, "Timeout: "); buf[8] = err_timeout ? '1':'0';
+            //  012345678901234567890
+  sprintf(buf, "Timeout:   "); buf[8] = err_timeout ? '1':'0';
+               //  012345678901234567890
+  sprintf(buf+10, "Log: " ); buf[14] = print_log ?  '1':'0';
   display_at_ln(buf, 2);
 
   sprintf(buf, "CRC: "); buf[4] = err_act ? '1':'0';
@@ -276,7 +276,12 @@ void display_menu()
   {
     menu_changed = false;
     err_act = false;  // manually clear the log error flag
-    Serial.print(F("\n*menu: ")); Serial.println((int)menu);
+    if (print_log)
+    { 
+      Serial.print(F("\n*menu: "));  
+      Serial.println((int)menu); 
+    }
+    
   }
   
   switch(menu)

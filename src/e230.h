@@ -18,7 +18,7 @@
 #endif
 
 #define __PROG__ "e-reader Yun"
-#define VERSION "05.026" // program version
+#define VERSION "05.027" // program version
 /*
   with dynamic alloc of E230_S
 */

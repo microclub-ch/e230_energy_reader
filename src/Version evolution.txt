@@ -1,6 +1,11 @@
 e230_energy_reader
 ==================
 
+YM : 24.01.2021 V027
+- log automatically stoped if Serial takes too long time
+RAM:   [======    ]  62.8% (used 1608 bytes from 2560 bytes)
+Flash: [==========]  96.7% (used 27740 bytes from 28672 bytes)
+
 YM : 2021.01.18 V 026
 - Add flag to allow Serial print
 RAM:   [======    ]  62.4% (used 1598 bytes from 2560 bytes)
